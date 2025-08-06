@@ -1,0 +1,10 @@
+# Python
+# 仮想環境フォルダ
+.venv/
+
+# Pythonが生成するキャッシュ
+__pycache__/
+*.pyc
+
+# VSCodeの設定ファイル（共有不要な場合）
+.vscode/
