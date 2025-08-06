@@ -8,3 +8,5 @@ __pycache__/
 
 # VSCodeの設定ファイル（共有不要な場合）
 .vscode/
+
+tradercompany-main/
