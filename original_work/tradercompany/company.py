@@ -46,7 +46,7 @@ class Company:
         # 最後の時刻tのデータはeducateするためのt+1のデータがないためstockだけする
         # stockしないとself.aggregate()で予測する時にt-1までのデータで時刻tを予測することになる
         data_to_stack = y_train[:, t-self.delay_time_max:t+1]
-        self.observe(data_to_stack) 
+        self.observe(data_to_stack)
 
     def fit_new_data(self, dict_y, tuning=False):
         # 最初にdf_y_trainにデータを追加。この時点では計算されていない。
@@ -139,7 +139,7 @@ class Company:
         return bad_traders
 
     def fire_and_recruit(self, t, y_true):
-        """ 上位Q%よりエラー率が悪いトレーダーを解雇、補充する 
+        """ 上位Q%よりエラー率が悪いトレーダーを解雇、補充する
         """
         if self.how_recruit == "gmm":
             list_vbgmm = []
@@ -153,7 +153,7 @@ class Company:
                 if bad_traders[i_stock][i_trader]:
                     if self.how_recruit == "gmm":
                         self.generate_trader_without_singular(i_trader, i_stock, t, list_vbgmm[i_stock][0], list_vbgmm[i_stock][1])
-                    else: 
+                    else:
                         self.generate_trader_without_singular_initialize_params(i_trader, i_stock, t)
                     self.traders[i_trader].calc_cumulative_error(y_true)
 
