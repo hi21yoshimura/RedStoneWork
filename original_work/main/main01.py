@@ -12,7 +12,7 @@ from tqdm import tqdm
 # tradercompanyライブラリがインストールされているパスを追加
 # 必要に応じて変更してください
 #sys.path.append('../')
-sys.path.append(r'C:\Users\hi21yoshimura\.vscode\RedStoneWork\original_work')
+sys.path.append(r'C:\Users\Y.Yoshimura\.vscode\GitHubRepository\RedStoneWork\RedStoneWork\original_work')
 
 """
 # Gemini----------------------------------------------------------------
