@@ -4,8 +4,8 @@ import random
 
 crossoverrate = 0.9 #交差率
 mutationrate = 0.01 #突然変異率
-population = 20     #個体群の大きさ
-generation = 1      #世代
+populations = 20     #個体群の大きさ
+generations = 1      #世代
 
 '''
 個体の遺伝子 = [num_factors, delay_P, delay_Q, stock_P, stock_Q,
@@ -15,3 +15,21 @@ generation = 1      #世代
 各遺伝子の型 = [int, int, int, int, int, activation_func[](numf_factors個),
                binary_operator[](num_factors個), int]
 '''
+
+class GeneticAlgorithmRecruiter:
+
+    def __init__(self, genom):
+        self.genom = genom
+        self.fitness = 0
+        self.set_fitness()
+
+    def set_fitness(self): #適応度の計算
+        self.fitne4ss = self.genom.sum()
+
+    def get_fitness(self):
+        return self.fitness
+
+    def create_generation(popurations, genoms):
+        generation = []
+        for i in range(populations):
+            individual = GeneticAlgorithmRecruiter()

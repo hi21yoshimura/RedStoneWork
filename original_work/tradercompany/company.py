@@ -2,9 +2,10 @@ import numpy as np
 import pandas as pd
 
 from tqdm import tqdm
-from sklearn import preprocessing, mixture 
+from sklearn import preprocessing, mixture
 
 from .trader import Trader
+from .genetic_algorithm import GeneticAlgorithmRecruiter
 
 class Company:
     def __init__(self, stock_names, num_factors_max, delay_time_max, activation_funcs, binary_operators, num_traders, Q=0.2, time_window=None, how_recruit="random"):
@@ -23,6 +24,10 @@ class Company:
         # if time_window==None, train by using all data
         self.time_window = time_window
         self.how_recruit = how_recruit
+
+        #how_recruitがgenetic_algorithmの場合の処理
+        if self.how_recruit == "genetic_algorithm":
+            self.ga_recruiter = GeneticAlgorithmRecruiter(self)
         
         self.df_y_train = None
 
@@ -146,13 +151,42 @@ class Company:
             good_traders = ~self.find_bad_traders(y_true, 1-self.Q)
             for i_stock in range(self.num_stock):
                 list_vbgmm.append(self.fit_vbgmm(i_stock, good_traders))
-        
+
+        #遺伝的アルゴリズムの場合の分岐
+        elif self.how_recruit == "genetic_algorithm":
+            good_traders_by_stock = []
+            good_traders_mask = ~self.find_bad_traders(y_true, 1-self.Q)
+            for i_stock in range(self.num_stock):
+                good_traders = [trader for i, trader in enumerate(self.traders) if good_traders_mask[i_stock][i]]
+                good_traders_by_stock.append(good_traders)
+
+
         bad_traders = self.find_bad_traders(y_true, self.Q)
         for i_trader in range(self.num_traders):
             for i_stock in range(self.num_stock):
                 if bad_traders[i_stock][i_trader]:
                     if self.how_recruit == "gmm":
                         self.generate_trader_without_singular(i_trader, i_stock, t, list_vbgmm[i_stock][0], list_vbgmm[i_stock][1])
+
+                    elif self.how_recruit == "genetic_algorithm":
+                        # GAで新しいTraderを1人採用する
+                        num_bad_traders = np.sum(bad_traders[i_stock])
+                        if num_bad_traders > 0:
+                            new_params_list = self.ga_recruiter.recruit(good_traders_by_stock[i_stock], num_bad_traders, i_stock)
+
+                            # bad_tradersのインデックスを取得
+                            bad_trader_indices = np.where(bad_traders[i_stock])[0]
+
+                            # 新しいパラメータをセットしていく
+                            # このループは1回しか回らない想定
+                            for idx, bad_idx in enumerate(bad_trader_indices):
+                                if i_trader == bad_idx:
+                                    self.traders[i_trader].set_params(i_stock, new_params_list[idx])
+                                    # パラメータ設定後、新しいTraderの過去のファクターを計算し直す
+                                    y_train = self.df_y_train.T.values
+                                    for time_idx in reversed(range(self.time_window)):
+                                        self.traders[i_trader].stack_factors(y_train[:,t-self.delay_time_max-1-time_idx:t-time_idx], i_stock)
+
                     else:
                         self.generate_trader_without_singular_initialize_params(i_trader, i_stock, t)
                     self.traders[i_trader].calc_cumulative_error(y_true)
