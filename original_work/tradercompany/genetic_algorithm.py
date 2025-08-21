@@ -4,8 +4,12 @@ import random
 
 crossoverrate = 0.9 #交差率
 mutationrate = 0.01 #突然変異率
-populations = 20     #個体群の大きさ
-generations = 1      #世代
+populations = 20    #個体群の大きさ
+generations = 1     #世代
+genoms = 8          #遺伝子の長さ
+
+SEED = 2021
+np.random.seed(SEED)
 
 '''
 個体の遺伝子 = [num_factors, delay_P, delay_Q, stock_P, stock_Q,
@@ -16,7 +20,8 @@ generations = 1      #世代
                binary_operator[](num_factors個), int]
 '''
 
-class GeneticAlgorithmRecruiter:
+#初期世代の作成------------------------------
+class GeneticAlgorithmRecruiter: #遺伝子情報を持つ個体の定義
 
     def __init__(self, genom):
         self.genom = genom
@@ -29,7 +34,28 @@ class GeneticAlgorithmRecruiter:
     def get_fitness(self):
         return self.fitness
 
+
     def create_generation(popurations, genoms):
         generation = []
         for i in range(populations):
             individual = GeneticAlgorithmRecruiter()
+            generation.append(individual)
+        return generation
+
+#世代の各個体の適応度の評価------------------------------
+    def ga_solve(generation): #各世代の最高適応度と最低適応度をまとめ・表示
+        best  = []
+        worst = []
+
+        for i in range(generations):
+            best_ind = max(generation, key = Individual.get_fitness)
+            best.append(best_ind.fitness)
+            worst_ind = min(generation, key = Individual.get_fitness)
+            worst.append(worst_ind.fitness)
+            print("generation:" + str(i) \
+                    + ": Best fitness: " + str(best_ind.fitness) \
+                    + ". Worst fitness: " + str(worst_ind.fitness))
+
+            print("Generation loop ended. The best individual: ")
+            print(best_ind.genom)
+            return best, worst
