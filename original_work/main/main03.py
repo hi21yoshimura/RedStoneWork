@@ -13,6 +13,7 @@ from tqdm import tqdm
 # 必要に応じて変更してください
 #sys.path.append('../')
 sys.path.append(r'C:\Users\hi21yoshimura\.vscode\RedStoneWork\original_work')
+sys.path.append(r'C:\Users\Y.Yoshimura\.vscode\GitHubRepository\RedStoneWork-1\original_work')
 
 """
 # Gemini----------------------------------------------------------------
@@ -98,7 +99,8 @@ model = Company(stock_names,
                 num_traders=40, 
                 Q=0.2, 
                 time_window=time_window, 
-                how_recruit="random")
+                how_recruit="gmm", #ここで雇用アルゴリズムを指定("random" or "genetic_algorithm" or "gmm")
+                ga_mutation_rate=0.01)
 
 # --- trainとtestに分ける ---
 T_train = 400

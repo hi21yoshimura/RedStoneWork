@@ -8,7 +8,7 @@ from .trader import Trader
 from .genetic_algorithm import GeneticAlgorithmRecruiter
 
 class Company:
-    def __init__(self, stock_names, num_factors_max, delay_time_max, activation_funcs, binary_operators, num_traders, Q=0.2, time_window=None, how_recruit="random"):
+    def __init__(self, stock_names, num_factors_max, delay_time_max, activation_funcs, binary_operators, num_traders, Q=0.2, time_window=None, how_recruit="random", ga_mutation_rate=0.01):
         """ time_window shold be larger than num_factors_max
             1-Qがbad_tradersの割合を表す，つまりQが大きいほど解雇される割合が少なくなる．Qは生存率ともいえる．
             とりあえず全員をbad_traderにしてみた，意味はない
@@ -24,10 +24,11 @@ class Company:
         # if time_window==None, train by using all data
         self.time_window = time_window
         self.how_recruit = how_recruit
+        self.ga_mutation_rate = ga_mutation_rate
 
         #how_recruitがgenetic_algorithmの場合の処理
         if self.how_recruit == "genetic_algorithm":
-            self.ga_recruiter = GeneticAlgorithmRecruiter(self)
+            self.ga_recruiter = GeneticAlgorithmRecruiter(self, mutation_rate=self.ga_mutation_rate)
         
         self.df_y_train = None
 
@@ -229,11 +230,17 @@ class Company:
             if good_traders[i_stock][i_trader]:
                 list_params = trader.get_params(i_stock)
                 dict_num_factor = list_params[0]
-                df_num_factor = df_num_factor.append(dict_num_factor, ignore_index=True)
+                #DataFrameでappendが使えなくなったので修正
+                #df_num_factor = df_num_factor.append(dict_num_factor, ignore_index=True)
+                new_row_df = pd.DataFrame([dict_num_factor])
+                df_num_factor = pd.concat([df_num_factor, new_row_df], ignore_index=True)
                 
                 for i_factor in range(dict_num_factor["num_factor"]):
                     dict_factor_params = list_params[i_factor+1]
-                    df_factor_params = df_factor_params.append(dict_factor_params, ignore_index=True)
+                    #DataFrameでappendが使えなくなったので修正
+                    #df_factor_params = df_factor_params.append(dict_factor_params, ignore_index=True)
+                    new_row_df = pd.DataFrame([dict_factor_params])
+                    df_factor_params = pd.concat([df_factor_params, new_row_df], ignore_index=True)
         print(df_factor_params)
         vbgmm_num_factor = self.VBGMM(df_num_factor, n_components=self.num_stock)
         vbgmm_factor_params = self.VBGMM(df_factor_params, n_components=3)
