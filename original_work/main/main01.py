@@ -12,7 +12,9 @@ from tqdm import tqdm
 # tradercompanyライブラリがインストールされているパスを追加
 # 必要に応じて変更してください
 #sys.path.append('../')
+sys.path.append(r'C:\Users\hi21yoshimura\.vscode\RedStoneWork\original_work')
 sys.path.append(r'C:\Users\Y.Yoshimura\.vscode\GitHubRepository\RedStoneWork\RedStoneWork\original_work')
+sys.path.append(r'C:\Users\Y.Yoshimura\.vscode\GitHubRepository\RedStoneWork-1\original_work')
 
 """
 # Gemini----------------------------------------------------------------
@@ -98,7 +100,7 @@ model = Company(stock_names,
                 num_traders=40, 
                 Q=0.2, 
                 time_window=time_window, 
-                how_recruit="random")
+                how_recruit="genetic_algorithm")
 
 # --- trainとtestに分ける ---
 T_train = 400
