@@ -66,7 +66,7 @@ df_y_train = df_y.iloc[:T_train, :]
 df_y_test = df_y.iloc[T_train:, :]
 
 # --- 比較したい採用手法をリストで指定 ---
-recruit_methods = ["genetic_algorithm", "random"] # <--- 変更点: 比較したい手法をリスト化
+recruit_methods = ["random", "genetic_algorithm"] # <--- 変更点: 比較したい手法をリスト化
 results_notuning = {}
 results_tuning = {}
 results_notuning_ma = {}
@@ -153,9 +153,9 @@ for i_stock, name in enumerate(stock_names):
     # 各手法の結果をプロット
     for method in recruit_methods:
         plt.plot(results_notuning_ma[method].iloc[:, i_stock], label=f"TC_{method}_notuning")
-        plt.plot(results_tuning_ma[method].iloc[:, i_stock], label=f"TC_{method}_tuning")
+        #plt.plot(results_tuning_ma[method].iloc[:, i_stock], label=f"TC_{method}_tuning")
 
-    plt.plot(errors_baseline_ma.iloc[:, i_stock], label="baseline")
+    #plt.plot(errors_baseline_ma.iloc[:, i_stock], label="baseline")
     plt.xlabel("time")
     plt.ylabel("mean average error")
     plt.legend()

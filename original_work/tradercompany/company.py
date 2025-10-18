@@ -147,6 +147,10 @@ class Company:
     def fire_and_recruit(self, t, y_true):
         """ 上位Q%よりエラー率が悪いトレーダーを解雇、補充する
         """
+
+        # まず解雇対象となるトレーダーを決定する(GA用)
+        bad_traders_mask = self.find_bad_traders(y_true, self.Q)
+
         if self.how_recruit == "gmm":
             list_vbgmm = []
             good_traders = ~self.find_bad_traders(y_true, 1-self.Q)
@@ -156,7 +160,8 @@ class Company:
         #遺伝的アルゴリズムの場合の分岐
         elif self.how_recruit == "genetic_algorithm":
             good_traders_by_stock = []
-            good_traders_mask = ~self.find_bad_traders(y_true, 1-self.Q)
+            #good_traders_mask = ~self.find_bad_traders(y_true, 1-self.Q)
+            good_traders_mask = ~bad_traders_mask
             for i_stock in range(self.num_stock):
                 good_traders = [trader for i, trader in enumerate(self.traders) if good_traders_mask[i_stock][i]]
                 good_traders_by_stock.append(good_traders)
@@ -243,12 +248,12 @@ class Company:
                     df_factor_params = pd.concat([df_factor_params, new_row_df], ignore_index=True)
         print(df_factor_params)
         vbgmm_num_factor = self.VBGMM(df_num_factor, n_components=self.num_stock)
-        vbgmm_factor_params = self.VBGMM(df_factor_params, n_components=3)
+        vbgmm_factor_params = self.VBGMM(df_factor_params, n_components=1)
 
         return vbgmm_num_factor, vbgmm_factor_params
 
     def VBGMM(self, X, n_components=10):
-        model = mixture.BayesianGaussianMixture(n_components=n_components)
+        model = mixture.BayesianGaussianMixture(n_components=n_components, reg_covar=1e-2)
         return model.fit(X)
         
     def aggregate(self):

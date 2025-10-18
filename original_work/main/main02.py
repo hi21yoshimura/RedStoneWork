@@ -87,7 +87,7 @@ model = Company(stock_names,
                 num_traders=40, 
                 Q=0.2, 
                 time_window=time_window, 
-                how_recruit="genetic_algorithm")
+                how_recruit="gmm")
 
 # --- trainとtestに分ける ---
 T_train = 500
@@ -168,8 +168,8 @@ print("--- 精度のプロット ---")
 for i_stock, name in enumerate(stock_names):
     print(name)
     plt.plot(errors_baseline_ma.iloc[:, i_stock], label="baseline")
-    plt.plot(errors_test_notuning_ma.iloc[:, i_stock], label="trader-company_notuning")
-    #plt.plot(errors_test_tuning_ma.iloc[:, i_stock], label="trader-company_tuning")
+    #plt.plot(errors_test_notuning_ma.iloc[:, i_stock], label="TC_GA_notuning")
+    plt.plot(errors_test_tuning_ma.iloc[:, i_stock], label="TC_gmm_tuning")
     #plt.plot(errors_lower_bound_ma.iloc[:, i_stock], label="lower-bound")
     plt.xlabel("time")
     plt.ylabel("mean average error")
