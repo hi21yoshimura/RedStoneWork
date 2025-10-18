@@ -14,6 +14,7 @@ import yfinance as yf
 # 必要に応じて変更してください
 #sys.path.append('../')
 sys.path.append(r'C:\Users\hi21yoshimura\.vscode\RedStoneWork\original_work')
+sys.path.append(r'C:\Users\Y.Yoshimura\.vscode\GitHubRepository\RedStoneWork-1\original_work')
 
 """
 # Gemini----------------------------------------------------------------
@@ -86,7 +87,7 @@ model = Company(stock_names,
                 num_traders=40, 
                 Q=0.2, 
                 time_window=time_window, 
-                how_recruit="random")
+                how_recruit="genetic_algorithm")
 
 # --- trainとtestに分ける ---
 T_train = 500
@@ -166,9 +167,9 @@ errors_baseline_ma = pd.DataFrame(errors_baseline, columns=stock_names, index=df
 print("--- 精度のプロット ---")
 for i_stock, name in enumerate(stock_names):
     print(name)
-    plt.plot(errors_test_notuning_ma.iloc[:, i_stock], label="trader-company_notuning")
-    plt.plot(errors_test_tuning_ma.iloc[:, i_stock], label="trader-company_tuning")
     plt.plot(errors_baseline_ma.iloc[:, i_stock], label="baseline")
+    plt.plot(errors_test_notuning_ma.iloc[:, i_stock], label="trader-company_notuning")
+    #plt.plot(errors_test_tuning_ma.iloc[:, i_stock], label="trader-company_tuning")
     #plt.plot(errors_lower_bound_ma.iloc[:, i_stock], label="lower-bound")
     plt.xlabel("time")
     plt.ylabel("mean average error")
