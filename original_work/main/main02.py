@@ -52,7 +52,7 @@ tickers = ["7203.T", "6758.T"]
 stock_names = ["TOYOTA", "SONY"]
 
 # データの取得期間を1年間に設定
-data = yf.download(tickers, period="2y")
+data = yf.download(tickers, period="4y")
 
 # 'Adj Close'(調整後終値)のみを使用し、日次収益率（前日比の変動率）に変換
 # Trader-Company法は価格そのものではなく、収益率を予測するためこの変換が重要
@@ -89,7 +89,7 @@ model = Company(stock_names,
                 how_recruit="random")
 
 # --- trainとtestに分ける ---
-T_train = 400
+T_train = 500
 df_y_train = df_y.iloc[:T_train, :]
 df_y_test = df_y.iloc[T_train:, :]
 

@@ -99,7 +99,7 @@ model = Company(stock_names,
                 num_traders=40, 
                 Q=0.2, 
                 time_window=time_window, 
-                how_recruit="gmm", #ここで雇用アルゴリズムを指定("random" or "genetic_algorithm" or "gmm")
+                how_recruit="genetic_algorithm", #ここで雇用アルゴリズムを指定("random" or "genetic_algorithm" or "gmm")
                 ga_mutation_rate=0.01)
 
 # --- trainとtestに分ける ---
