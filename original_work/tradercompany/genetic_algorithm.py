@@ -80,7 +80,8 @@ class GeneticAlgorithmRecruiter:
             parent1, parent2 = self._selection(good_traders, fitness_scores)
 
             # 2. 交叉 (一点交叉)
-            child_params1, child_params2 = self.single_point_crossover(parent1, parent2, i_stock)
+            #child_params1, child_params2 = self.single_point_crossover(parent1, parent2, i_stock)
+            child_params1, child_params2 = self.two_point_crossover(parent1, parent2, i_stock)
 
             # 3. 突然変異
             child_params1 = self._mutation(child_params1)
@@ -132,23 +133,42 @@ class GeneticAlgorithmRecruiter:
 
     #交叉
     def two_point_crossover(self, parent1, parent2, i_stock):
-        '''交叉の関数(二点交叉)
-            input: 混ぜ合わせたい個体のペア
-            output: 交叉後の個体のペア'''
+        """
+        二点交叉により新しい子個体（パラメータ）を生成する。
 
+        この実装は、親1と親2の遺伝子（パラメータリスト）の長さが異なる場合、
+        生成される子の長さも変化する可能性があります。
+        これは、既存の `single_point_crossover` の振る舞いを踏襲しています。
+
+        Args:
+            parent1 (Trader): 親個体1。
+            parent2 (Trader): 親個体2。
+            i_stock (int): 対象となる株のインデックス。
+
+        Returns:
+            tuple: 2つの新しい子個体のパラメータリスト (child_params1, child_params2) のタプル。
+        """
         params1 = parent1.get_params(i_stock)
         params2 = parent2.get_params(i_stock)
+
+
         size = min(len(params1), len(params2))
-        cxpoint1 = np.random.randint(1, size)
-        cxpoint2 = np.random.randint(1, size - 1)
-        if cxpoint2 >= cxpoint1:
-            cxpoint2 += 1
-        else:
-            cxpoint1, cxpoint2 = cxpoint2, cxpoint1
-        tmp1[cxpoint1:cxpoint2], tmp2[cxpoint1:cxpoint2] = tmp2[cxpoint1:cxpoint2].copy(), tmp1[cxpoint1:cxpoint2].copy()
-        new_child1 = GeneticAlgorithmRecruiter(tmp1)
-        new_child2 = GeneticAlgorithmRecruiter(tmp2)
-        return new_child1, new_child2
+
+        if size < 3:
+
+            return self.single_point_crossover(parent1, parent2, i_stock)
+
+        cxpoint1 = random.randint(1, size - 2)
+
+        cxpoint2 = random.randint(cxpoint1 + 1, size - 1)
+
+        child_params1 = params1[:cxpoint1] + params2[cxpoint1:cxpoint2] + params1[cxpoint2:]
+        child_params2 = params2[:cxpoint1] + params1[cxpoint1:cxpoint2] + params2[cxpoint2:]
+
+        child_params1[0]['num_factor'] = len(child_params1) - 1
+        child_params2[0]['num_factor'] = len(child_params2) - 1
+
+        return child_params1, child_params2
 
     def uniform_crossover(child1, child2):
         '''交叉の関数(一様交叉)
