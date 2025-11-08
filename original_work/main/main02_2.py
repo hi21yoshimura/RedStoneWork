@@ -89,7 +89,7 @@ results_notuning_ma = {}
 results_tuning_ma = {}
 
 recruit_line = 0.6
-num_traders = 400
+num_traders = 100
 mutation_rate = 0.01
 
 # --- JSAI2020 CUMRET: (追加 & 修正) ---

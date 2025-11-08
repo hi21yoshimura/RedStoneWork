@@ -53,17 +53,34 @@ fix_all_seeds(SEED)
 
 # --- 1. 実際の株価データを取得・加工 ---
 print("--- yfinanceから株価データを取得・加工開始 ---")
-tickers = ["7203.T", "6758.T"]
-stock_names = ["TOYOTA", "SONY"]
+# 変更前
+# tickers = ["7203.T", "6758.T"]
+# stock_names = ["TOYOTA", "SONY"]
+
+# 変更後 (S&P500)
+tickers = ["^GSPC"]  # S&P500のティッカーシンボル
+stock_names = ["S&P500"]
 data = yf.download(tickers, period="4y")
 
 # --- JSAI2020 CUMRET: (変更) ---
 # 論文 (2.1節) に従い、対数利回り r_i,t = log(X_i,t / X_i,t-1) を使用
 df_y = np.log(data['Close'] / data['Close'].shift(1))
+if isinstance(df_y, pd.Series):
+    # もしdf_yがSeriesなら、DataFrameに変換する
+    df_y = df_y.to_frame()
+
+# これで df_y は必ず DataFrame になっている (L55)
+    df_y.columns = stock_names # (L59 と同じ)
+    
+    # --- 必須修正 ---
+    # 1. np.inf (無限大) と -np.inf (マイナス無限大) を np.nan に置換する
+    df_y = df_y.replace([np.inf, -np.inf], np.nan)
+    
+    # 2. np.nan になった行をすべて削除する (dropna はここで1回だけ行えばOK)
+    df_y = df_y.dropna()
+    # ---------------
 # -----------------------------------
 
-df_y = df_y.dropna()
-df_y.columns = stock_names
 print("--- データ取得・加工完了 ---")
 print(f"取得した対数利回りデータの先頭5行:")
 print(df_y.head())
@@ -89,7 +106,7 @@ results_notuning_ma = {}
 results_tuning_ma = {}
 
 recruit_line = 0.6
-num_traders = 400
+num_traders = 100
 mutation_rate = 0.01
 
 # --- JSAI2020 CUMRET: (追加 & 修正) ---
@@ -220,9 +237,13 @@ for method in recruit_methods:
         index=test_index
     )
     # 2. 銘柄ごとの累積リターン (c_i,t^f) を計算
-    df_cumret_per_stock_nt = df_strategy_ret_nt.cumsum()
+    #df_cumret_per_stock_nt = df_strategy_ret_nt.cumsum()
     # 3. 銘柄間で平均し、CUMRET (C_t^f) を計算
-    cumret_results[f"TC_{method}_notuning"] = df_cumret_per_stock_nt.mean(axis=1)
+    #cumret_results[f"TC_{method}_notuning"] = df_cumret_per_stock_nt.mean(axis=1)
+    # 変更後 (推奨)
+    df_cumret_per_stock_nt = df_strategy_ret_nt.cumsum()
+    cumret_results[f"TC_{method}_notuning"] = df_cumret_per_stock_nt.iloc[:, 0] # 1列目を明示的に取得
+
 
     # --- Tuning ---
     df_strategy_ret_t = pd.DataFrame(
@@ -230,13 +251,21 @@ for method in recruit_methods:
         columns=stock_names, 
         index=test_index
     )
+    #df_cumret_per_stock_t = df_strategy_ret_t.cumsum()
+    #cumret_results[f"TC_{method}_tuning"] = df_cumret_per_stock_t.mean(axis=1)
+    # 変更後 (推奨)
+    # 正: df_strategy_ret_t を cumsum する
     df_cumret_per_stock_t = df_strategy_ret_t.cumsum()
-    cumret_results[f"TC_{method}_tuning"] = df_cumret_per_stock_t.mean(axis=1)
+    # 正: df_cumret_per_stock_t を参照する
+    cumret_results[f"TC_{method}_tuning"] = df_cumret_per_stock_t.iloc[:, 0]
 
 # Baseline: Market (常に b_hat=1 としてホールド)
 # (実リターン df_y_test をそのまま累積し、銘柄平均をとる)
+#df_cumret_market = df_y_test.cumsum()
+#cumret_results["Market"] = df_cumret_market.mean(axis=1)
+# 変更後 (推奨)
 df_cumret_market = df_y_test.cumsum()
-cumret_results["Market"] = df_cumret_market.mean(axis=1)
+cumret_results[f"Market"] = df_cumret_market.iloc[:, 0] # 1列目を明示的に取得
 
 print("--- 計算完了 ---\n")
 # ---------------------------------
@@ -283,22 +312,21 @@ for i_stock, name in enumerate(stock_names):
     print("baseline", errors_baseline[i_stock].mean())
 print("-----------------\n")
 
-# --- モデルの解釈 (ここは変更なし) ---
 print("--- モデルの解釈 (tuningありモデル) ---")
-# (中身は main02_1.py と同様のため省略)
 num_stock = len(stock_names)
-# (エラー回避のため、ロードするモデルを明示的に指定)
 with open(f"model_{recruit_methods[-1]}.pkl", "rb") as f:
     model_tuning = pickle.load(f)
 
+# 1銘柄目 (S&P500) のランキングのみ計算
 traders_ranking_0 = np.argsort([trader.cumulative_error[0] for trader in model_tuning.traders]) 
-traders_ranking_1 = np.argsort([trader.cumulative_error[1] for trader in model_tuning.traders]) 
 
-print(stock_names[0])
+# traders_ranking_1 は不要なので削除 (L263)
+
+print(stock_names[0]) # 1銘柄目を表示
 print("Best trader's binary operators:", model_tuning.traders[traders_ranking_0[0]].binary_operator[0])
 print("Best trader's activation functions:", model_tuning.traders[traders_ranking_0[0]].activation_func[1])
 print("")
-print(stock_names[1])
-print("Best trader's binary operators:", model_tuning.traders[traders_ranking_1[0]].binary_operator[0])
-print("Best trader's activation functions:", model_tuning.traders[traders_ranking_1[0]].activation_func[1])
+
+# 2銘柄目に関する記述 (L267〜L273) はすべて削除
+
 print("---------------------\n")
