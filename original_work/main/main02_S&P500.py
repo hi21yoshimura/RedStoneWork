@@ -65,20 +65,22 @@ data = yf.download(tickers, period="4y")
 # --- JSAI2020 CUMRET: (変更) ---
 # 論文 (2.1節) に従い、対数利回り r_i,t = log(X_i,t / X_i,t-1) を使用
 df_y = np.log(data['Close'] / data['Close'].shift(1))
+# --- 修正後のロジック (L54-L67 をこちらに差し替え) ---
+
+# 1. (IF文) Series の場合のみ DataFrame に変換する
 if isinstance(df_y, pd.Series):
-    # もしdf_yがSeriesなら、DataFrameに変換する
     df_y = df_y.to_frame()
 
-# これで df_y は必ず DataFrame になっている (L55)
-    df_y.columns = stock_names # (L59 と同じ)
-    
-    # --- 必須修正 ---
-    # 1. np.inf (無限大) と -np.inf (マイナス無限大) を np.nan に置換する
-    df_y = df_y.replace([np.inf, -np.inf], np.nan)
-    
-    # 2. np.nan になった行をすべて削除する (dropna はここで1回だけ行えばOK)
-    df_y = df_y.dropna()
-    # ---------------
+# 2. (IF文の外) np.inf を np.nan に置換する (常に実行)
+df_y = df_y.replace([np.inf, -np.inf], np.nan)
+
+# 3. (IF文の外) .dropna() を実行する (常に実行)
+df_y = df_y.dropna()
+
+# 4. (IF文の外) カラム名を設定する (常に実行)
+df_y.columns = stock_names
+
+# -----------------------------------
 # -----------------------------------
 
 print("--- データ取得・加工完了 ---")
@@ -318,13 +320,13 @@ with open(f"model_{recruit_methods[-1]}.pkl", "rb") as f:
     model_tuning = pickle.load(f)
 
 # 1銘柄目 (S&P500) のランキングのみ計算
-traders_ranking_0 = np.argsort([trader.cumulative_error[0] for trader in model_tuning.traders]) 
+traders_ranking_0 = np.argsort([trader.cumulative_error[0] for trader in model_tuning.traders])
 
 # traders_ranking_1 は不要なので削除 (L263)
 
 print(stock_names[0]) # 1銘柄目を表示
 print("Best trader's binary operators:", model_tuning.traders[traders_ranking_0[0]].binary_operator[0])
-print("Best trader's activation functions:", model_tuning.traders[traders_ranking_0[0]].activation_func[1])
+print("Best trader's activation functions:", model_tuning.traders[traders_ranking_0[0]].activation_func[0])
 print("")
 
 # 2銘柄目に関する記述 (L267〜L273) はすべて削除

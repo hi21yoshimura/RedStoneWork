@@ -124,12 +124,43 @@ class Trader():
         return None
     
     def learn(self, y, i_stock):
-        epsilon = 0.0001
+        """
+        Traderが自身の重み(w)を学習（更新）します。
+        Ridge回帰（L2正則化付き最小二乗法）を使用して、
+        X (ファクター) と y (実リターン) から最適な重みを計算します。
+
+        Args:
+            y (np.ndarray): 目的変数（実リターン）の時系列データ
+            i_stock (int): 学習対象の銘柄インデックス
+        """
+        epsilon = 0.0001  # 正則化のための微小な値 (ハイパーパラメータ)
         X = self.X_factors[i_stock]
+
         if self._check_rank_deficient(i_stock):
+            # ファクター行列がランク落ちしている (列が線形従属) 場合は、
+            # 計算が不安定になるため重みを 0 に設定します。
             self.w[i_stock] = np.zeros(len(self.w[i_stock]))
         else:
-            self.w[i_stock] = np.linalg.inv(X.T.dot(X) + epsilon).dot(X.T).dot(y)
+            # --- 修正箇所 ---
+            # A = X.T * X (内積)
+            A = X.T.dot(X)
+            
+            # Ridge回帰の正しい計算: A + ε * I (Iは単位行列)
+            # (元のコード: A + epsilon は数学的に誤り)
+            try:
+                # 単位行列 (Identity Matrix) を作成
+                identity_matrix = np.eye(A.shape[0])
+                # 正則化された行列 A を計算
+                A_regularized = A + epsilon * identity_matrix
+                
+                # (A + εI)^-1 * (X.T * y) を計算して重みwを求める
+                self.w[i_stock] = np.linalg.inv(A_regularized).dot(X.T).dot(y)
+            
+            except np.linalg.LinAlgError:
+                # 稀に、上記でもなお数値的に不安定な場合、
+                # エラーを回避して重みを 0 に設定します。
+                self.w[i_stock] = np.zeros(len(self.w[i_stock]))
+            # --- 修正完了 ---
     
     def _check_rank_deficient(self, i_stock):
         """ ランク落ちを確認
