@@ -74,7 +74,9 @@ tickers = [
 
 print(f"--- {len(tickers)}銘柄のデータを取得します... ---")
 # 期間は論文に合わせて3-4年にするのが良いでしょう
-data = yf.download(tickers, period="4y")
+start = '1989-01-01'
+#end   = '1991-01-01'
+data = yf.download(tickers, start, period='4y')
 
 # --- JSAI2020 CUMRET: (変更) ---
 df_y = np.log(data['Close'] / data['Close'].shift(1))
