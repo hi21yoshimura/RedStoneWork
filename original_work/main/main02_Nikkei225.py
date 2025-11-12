@@ -57,6 +57,7 @@ print("--- yfinanceから株価データを取得・加工開始 ---")
 # JSAI2020論文の戦略（多銘柄の平均）をテストするため、
 # Nikkei 225から代表的な20銘柄をサンプリングします。
 
+#'''
 stock_names = [
     "SONY", "TOYOTA", "SoftBank", "Keyence", "Nintendo",
     "Mitsubishi UFJ", "Takeda Pharma", "NTT", "KDDI", "Recruit",
@@ -65,18 +66,24 @@ stock_names = [
 ]
 
 # (Yahoo Finance用ティッカーシンボル: .T を忘れずに)
+
 tickers = [
     "6758.T", "7203.T", "9984.T", "6861.T", "7974.T",
     "8306.T", "4502.T", "9432.T", "9433.T", "6098.T",
     "6501.T", "6752.T", "9983.T", "4063.T", "8035.T",
     "4452.T", "3382.T", "8316.T", "8411.T", "6954.T"
 ]
+#'''
+#stock_names = ["Nikkei225"]
+#tickers = ["^N225"]
+
 
 print(f"--- {len(tickers)}銘柄のデータを取得します... ---")
 # 期間は論文に合わせて3-4年にするのが良いでしょう
-start = '1989-01-01'
-#end   = '1991-01-01'
-data = yf.download(tickers, start, period='4y')
+start = '2018-01-01'
+end   = '2021-01-01'
+data = yf.download(tickers, start, end)
+#data = yf.download(tickers, start, period = '4y')
 
 # --- JSAI2020 CUMRET: (変更) ---
 df_y = np.log(data['Close'] / data['Close'].shift(1))
