@@ -57,7 +57,7 @@ print("--- yfinanceから株価データを取得・加工開始 ---")
 # JSAI2020論文の戦略（多銘柄の平均）をテストするため、
 # Nikkei 225から代表的な20銘柄をサンプリングします。
 
-#'''
+'''
 stock_names = [
     "SONY", "TOYOTA", "SoftBank", "Keyence", "Nintendo",
     "Mitsubishi UFJ", "Takeda Pharma", "NTT", "KDDI", "Recruit",
@@ -73,15 +73,53 @@ tickers = [
     "6501.T", "6752.T", "9983.T", "4063.T", "8035.T",
     "4452.T", "3382.T", "8316.T", "8411.T", "6954.T"
 ]
+'''
+
 #'''
+stock_names = [
+    "Nissui",          # 1332: ニッスイ
+    "Ajinomoto",       # 2802: 味の素
+    "Toray",           # 3402: 東レ
+    "Asahi Kasei",     # 3407: 旭化成
+    "Takeda",          # 4502: 武田薬品工業
+    "Fujifilm",        # 4901: 富士フイルムホールディングス
+    "Bridgestone",     # 5108: ブリヂストン
+    "Nippon Steel",    # 5401: 日本製鉄
+    "Komatsu",         # 6301: 小松製作所
+    "Hitachi",         # 6501: 日立製作所
+    "Mitsubishi Elec", # 6503: 三菱電機
+    "Panasonic",       # 6752: パナソニック ホールディングス
+    "Sony",            # 6758: ソニーグループ
+    "Toyota",          # 7203: トヨタ自動車
+    "Honda",           # 7267: 本田技研工業
+    "Canon",           # 7751: キヤノン
+    "Itochu",          # 8001: 伊藤忠商事
+    "Mitsui",          # 8031: 三井物産
+    "Mitsubishi Corp", # 8058: 三菱商事
+    "Mitsui Fudosan"   # 8801: 三井不動産
+]
+
+# yfinance用ティッカーシンボルのリスト（証券コード + .T）
+tickers = [
+    "1332.T", "2802.T", "3402.T", "3407.T", "4502.T",
+    "4901.T", "5108.T", "5401.T", "6301.T", "6501.T",
+    "6503.T", "6752.T", "6758.T", "7203.T", "7267.T",
+    "7751.T", "8001.T", "8031.T", "8058.T", "8801.T"
+]
+#'''
+
 #stock_names = ["Nikkei225"]
 #tickers = ["^N225"]
 
 
 print(f"--- {len(tickers)}銘柄のデータを取得します... ---")
 # 期間は論文に合わせて3-4年にするのが良いでしょう
-start = '2018-01-01'
+#tart = '1982-01-01'
+#end   = '1992-01-01'
+
+start = '2017-01-01'
 end   = '2021-01-01'
+
 data = yf.download(tickers, start, end)
 #data = yf.download(tickers, start, period = '4y')
 
@@ -119,7 +157,8 @@ delay_time_max = 2
 num_factors_max = 4
 
 # --- trainとtestに分ける ---
-T_train = 250
+#T_train = 1750 # 7年分学習させた場合(1750)と1~2年分学習＋5年間進化(250~500)を比較
+T_train = 500
 df_y_train = df_y.iloc[:T_train, :]
 df_y_test = df_y.iloc[T_train:, :]
 
@@ -304,7 +343,7 @@ for label, cumret_series in cumret_results.items():
 
 # 論文の図1 に合わせて Y軸ラベル を設定
 plt.title(f"Cumulative Return (CUMRET) (Q={recruit_line}, num_trader={num_traders}, mutation_rate={mutation_rate})")
-plt.ylabel("Log Cumulative Return") #
+plt.ylabel("対数利回り(Log Cumulative Return)")
 plt.xlabel("Time")
 plt.legend()       # 凡例を表示
 plt.grid(True)     # グリッドを表示
