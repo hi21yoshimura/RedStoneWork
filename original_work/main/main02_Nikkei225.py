@@ -113,12 +113,18 @@ tickers = [
 
 
 print(f"--- {len(tickers)}銘柄のデータを取得します... ---")
-# 期間は論文に合わせて3-4年にするのが良いでしょう
+
+#バブル期
 #tart = '1982-01-01'
 #end   = '1992-01-01'
 
+#コロナ禍
 start = '2017-01-01'
 end   = '2021-01-01'
+
+#リーマンショック
+#start = '1995-01-01'
+#end   = '2010-01-01'
 
 data = yf.download(tickers, start, end)
 #data = yf.download(tickers, start, period = '4y')
@@ -153,8 +159,10 @@ print("--------------------------\n")
 activation_funcs = [identity, ReLU, sign, tanh]
 binary_operators = [max, min, add, diff, multiple, get_x, get_y, x_is_greater_than_y]
 time_window = 200
+#delay_time_max = 2
+#num_factors_max = 4
 delay_time_max = 2
-num_factors_max = 4
+num_factors_max = 15
 
 # --- trainとtestに分ける ---
 #T_train = 1750 # 7年分学習させた場合(1750)と1~2年分学習＋5年間進化(250~500)を比較

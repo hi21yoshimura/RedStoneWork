@@ -168,7 +168,7 @@ for method in recruit_methods:
     for i, row in tqdm(df_y_test.iterrows(), total=len(df_y_test), desc=f"{method} no_tuning"):
         # 予測
         prediction_test = model_no_tuning.aggregate()
-        
+
         # 誤差の計算 (従来通り)
         current_errors_notuning.append(np.abs(row.values - prediction_test))
 
@@ -176,7 +176,7 @@ for method in recruit_methods:
         # 1. 予測値(prediction_test)からシグナル(b_hat)を決定
         signal = np.sign(prediction_test)
         # 2. シグナル * 実リターン(row.values) を計算
-        strategy_return = signal * row.values 
+        strategy_return = signal * row.values
         strategy_returns_notuning[method].append(strategy_return)
         # ---------------------------------
 
@@ -195,7 +195,7 @@ for method in recruit_methods:
     current_errors_tuning = []
     for i, row in tqdm(df_y_test.iterrows(), total=len(df_y_test), desc=f"{method} tuning"):
         prediction_test = model_tuning.aggregate()
-        
+
         # 誤差の計算 (従来通り)
         current_errors_tuning.append(np.abs(row.values - prediction_test))
 
@@ -206,7 +206,7 @@ for method in recruit_methods:
         strategy_return = signal * row.values
         strategy_returns_tuning[method].append(strategy_return)
         # ---------------------------------
-        
+
         # 新しいデータでモデルを更新
         model_tuning.fit_new_data(row.to_dict(), tuning=True)
 
@@ -234,8 +234,8 @@ for method in recruit_methods:
     # --- No Tuning ---
     # 1. 戦略リターンのリストをDataFrameに変換
     df_strategy_ret_nt = pd.DataFrame(
-        strategy_returns_notuning[method], 
-        columns=stock_names, 
+        strategy_returns_notuning[method],
+        columns=stock_names,
         index=test_index
     )
     # 2. 銘柄ごとの累積リターン (c_i,t^f) を計算
@@ -249,8 +249,8 @@ for method in recruit_methods:
 
     # --- Tuning ---
     df_strategy_ret_t = pd.DataFrame(
-        strategy_returns_tuning[method], 
-        columns=stock_names, 
+        strategy_returns_tuning[method],
+        columns=stock_names,
         index=test_index
     )
     #df_cumret_per_stock_t = df_strategy_ret_t.cumsum()

@@ -9,6 +9,7 @@ import seaborn as sns
 # --- 1. パスの設定 (重要) ---
 # tradercompany フォルダを読み込めるように、一つ上の階層をパスに追加します
 sys.path.append('../')
+sys.path.append(r'C:\Users\Y.Yoshimura\.vscode\GitHubRepository\RedStoneWork-1\original_work')
 
 # もしクラス定義の読み込みでエラーが出る場合は、明示的にimportが必要な場合があります
 # from tradercompany.company import Company 
@@ -89,6 +90,7 @@ def visualize_genes(model):
 if __name__ == "__main__":
     # ここでファイル名を指定
     model_filename = "model_genetic_algorithm.pkl"
+    #model_filename = "model_random.pkl"
     
     if os.path.exists(model_filename):
         print(f"{model_filename} を読み込んでいます...")
