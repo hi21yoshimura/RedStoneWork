@@ -1,11 +1,11 @@
 """
-Trader-Company法 卒業研究分析スクリプト (Final Version 8)
+Trader-Company法 卒業研究分析スクリプト (Final Version 9)
 
 修正点:
-- BASE_PKL_DIR, CACHE_FILE のパス更新
-- (A)最終累積利回りをRandom/Geneticの比較形式(2枚並び)に変更
-- ヒートマップの配色を「赤(低) -> 白 -> 緑(高)」にカスタム設定
-- (D)のタイトル変更と全タイトルの文字サイズ拡大
+- 軸ラベル(xlabel, ylabel)と目盛り(ticks)のフォントサイズを拡大調整
+- BASE_PKL_DIR, CACHE_FILE は指定の設定を維持
+- (A)最終累積利回りをRandom/Geneticの比較形式(2枚並び・赤白緑)で出力
+- (D)のタイトル変更と全フォントサイズの最適化
 """
 
 import sys
@@ -54,7 +54,11 @@ FACTOR_PARAMS = [2, 4, 10, 15]
 # ヒートマップ共通設定
 HEATMAP_VMIN = -0.3
 HEATMAP_VMAX = 0.3
-TITLE_FONT_SIZE = 18  # タイトルの文字サイズ
+
+# --- フォントサイズ設定 (視認性向上) ---
+TITLE_FONT_SIZE = 18  # タイトル
+LABEL_FONT_SIZE = 15  # 軸ラベル (Factors, Delay)
+TICK_FONT_SIZE = 12   # 目盛り (1, 2, 7...)
 
 # 株価データ取得設定
 START_DATE = '2017-01-01'
@@ -244,26 +248,46 @@ def show_average_table(df, market_stats):
     df_table.to_csv("average_comparison_table.csv")
 
 def plot_heatmaps(df):
-    """ヒートマップを出力 (要望に合わせて構成変更)"""
+    """ヒートマップを出力 (フォントサイズ調整・(A)個別出力版)"""
     print("\n--- ヒートマップを作成中 ---")
     
     # カスタムカラーマップ作成: 赤(低) -> 白(中) -> 緑(高)
-    # 値が -0.3(赤) ... 0(白) ... 0.3(緑) となるように
     colors = ["red", "white", "green"]
     custom_cmap = mcolors.LinearSegmentedColormap.from_list("RedWhiteGreen", colors)
 
+    # 共通設定 (カラーバーの目盛りサイズも調整)
     heatmap_kwargs = {
         'annot': True, 
         'fmt': ".3f", 
         'cbar': True,
         'vmin': HEATMAP_VMIN,
         'vmax': HEATMAP_VMAX,
-        'cmap': custom_cmap # カスタムカラーを使用
+        'cmap': custom_cmap,
+        'annot_kws': {'size': TICK_FONT_SIZE},     # ヒートマップ内の数字サイズ
+        'cbar_kws': {'label': ''}                  # カラーバーラベル(必要なら設定)
     }
     
-    # (D) のデータを計算: Genetic乖離 - Random乖離
+    # (D) 用のデータ計算: Genetic乖離 - Random乖離
     df["diff_improvement"] = df["diff_min_genetic"] - df["diff_min_random"]
 
+    # プロット関数ヘルパー: 軸フォント適用
+    def apply_axis_settings(ax, title, xlabel, ylabel, ylabel_visible=True):
+        ax.set_title(title, fontsize=TITLE_FONT_SIZE, pad=15)
+        ax.set_xlabel(xlabel, fontsize=LABEL_FONT_SIZE)
+        if ylabel_visible:
+            ax.set_ylabel(ylabel, fontsize=LABEL_FONT_SIZE)
+        else:
+            ax.set_ylabel("", fontsize=LABEL_FONT_SIZE)
+            ax.set_yticks([])
+        
+        # 目盛りサイズの変更
+        ax.tick_params(axis='both', which='major', labelsize=TICK_FONT_SIZE)
+        
+        # カラーバーのフォントサイズ調整 (Seabornの仕様上、作成後にアクセス)
+        cbar = ax.collections[0].colorbar
+        cbar.ax.tick_params(labelsize=TICK_FONT_SIZE)
+
+    '''
     # --- 1. 画像(A): 最終累積利回り (Random & Genetic) ---
     fig_a, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
     
@@ -288,58 +312,79 @@ def plot_heatmaps(df):
     plt.savefig("heatmap_cumret_comparison.png")
     print("画像保存: heatmap_cumret_comparison.png")
     plt.close()
+    '''
 
-    # --- 2. 画像(B)&(C): 乖離の比較 (Market最低時) ---
-    fig_bc, (ax3, ax4) = plt.subplots(1, 2, figsize=(16, 6))
+    # =========================================================
+    # (A-1) 最終累積利回り (Random) - 独立画像
+    # =========================================================
+    plt.figure(figsize=(9, 7))
+    pivot_cum_rand = df.pivot(index="delay_time_max", columns="num_factors_max", values="cumret_random")
+    pivot_cum_rand = pivot_cum_rand.sort_index(ascending=False)
     
-    # 配色は「0に近いほど良い(白)」など解釈が異なる場合もありますが、
-    # ここでは統一感を出すため同じRed-White-Greenを使うか、
-    # あるいは乖離なので「白(0)が良い」ことを示すために
-    # 'Reds'や'Blues'を使うのが一般的ですが、要望により統一しますか？
-    # 前回のコードではReds/Bluesを使っていました。
-    # 今回の指示は「(B),(C)のように繋げて」「色は高い方から緑...」は(A)に対する指示と解釈できます。
-    # ですが「すべてのヒートマップのカラー範囲を...」という以前の指示もあるので、
-    # 乖離についても、今回は視認性を優先し、以前のReds/Blues構成を維持します。
-    # (乖離は「小さい方が良い」ので、緑-白-赤だと混乱を招く可能性があります)
+    ax = sns.heatmap(pivot_cum_rand, **heatmap_kwargs)
+    apply_axis_settings(ax, "最終累積利回り（Random）", "Factors", "Delay", ylabel_visible=True)
+    
+    plt.tight_layout()
+    plt.savefig("heatmap_cumret_random.png")
+    print("画像保存: heatmap_cumret_random.png")
+    plt.close()
+
+    # =========================================================
+    # (A-2) 最終累積利回り (Genetic algorithm) - 独立画像
+    # =========================================================
+    plt.figure(figsize=(9, 7))
+    pivot_cum_gen = df.pivot(index="delay_time_max", columns="num_factors_max", values="cumret_genetic")
+    pivot_cum_gen = pivot_cum_gen.sort_index(ascending=False)
+    
+    ax = sns.heatmap(pivot_cum_gen, **heatmap_kwargs)
+    apply_axis_settings(ax, "最終累積利回り（Genetic algorithm）", "Factors", "Delay", ylabel_visible=True)
+    
+    plt.tight_layout()
+    plt.savefig("heatmap_cumret_genetic.png")
+    print("画像保存: heatmap_cumret_genetic.png")
+    plt.close()
+
+    # =========================================================
+    # (B)&(C) 乖離の比較 (Market最低時) - 連結画像
+    # =========================================================
+    fig_bc, (ax3, ax4) = plt.subplots(1, 2, figsize=(18, 7))
     
     heatmap_kwargs_bc = heatmap_kwargs.copy()
-    del heatmap_kwargs_bc['cmap'] # デフォルトまたは指定色に戻す
+    del heatmap_kwargs_bc['cmap'] # デフォルト配色に戻す
 
     # (B) Random 乖離
     pivot_diff_rand = df.pivot(index="delay_time_max", columns="num_factors_max", values="diff_min_random")
     pivot_diff_rand = pivot_diff_rand.sort_index(ascending=False)
     sns.heatmap(pivot_diff_rand, cmap="Reds", ax=ax3, **heatmap_kwargs_bc)
-    ax3.set_title("(B) Market最低時の乖離 (Random)", fontsize=TITLE_FONT_SIZE)
-    ax3.set_xlabel("Factors")
-    ax3.set_ylabel("Delay")
+    apply_axis_settings(ax3, "(B) Market最低時の乖離 (Random)", "Factors", "Delay", ylabel_visible=True)
 
     # (C) Genetic 乖離
     pivot_diff_gen = df.pivot(index="delay_time_max", columns="num_factors_max", values="diff_min_genetic")
     pivot_diff_gen = pivot_diff_gen.sort_index(ascending=False)
     sns.heatmap(pivot_diff_gen, cmap="Blues", ax=ax4, **heatmap_kwargs_bc)
-    ax4.set_title("(C) Market最低時の乖離 (Genetic)", fontsize=TITLE_FONT_SIZE)
-    ax4.set_xlabel("Factors")
-    ax4.set_ylabel("")
-    ax4.set_yticks([])
+    apply_axis_settings(ax4, "(C) Market最低時の乖離 (Genetic)", "Factors", "", ylabel_visible=False)
 
     plt.tight_layout()
     plt.savefig("heatmap_deviation_BC.png")
     print("画像保存: heatmap_deviation_BC.png")
     plt.close()
 
-    # --- 3. 画像(D): Market最低時の累積利回りの差 ---
-    plt.figure(figsize=(8, 6))
+    # =========================================================
+    # (D) Market最低時の累積利回りの差 - 独立画像
+    # =========================================================
+    plt.figure(figsize=(9, 7))
     pivot_diff_imp = df.pivot(index="delay_time_max", columns="num_factors_max", values="diff_improvement")
     pivot_diff_imp = pivot_diff_imp.sort_index(ascending=False)
     
-    # 差分は RdBu (青=High=Genetic乖離大, 赤=Low=Random乖離大)
-    # ここは以前の指定「高い方から青、赤」を維持
-    sns.heatmap(pivot_diff_imp, cmap="RdBu", center=0, 
-                annot=True, fmt=".3f", cbar=True, vmin=HEATMAP_VMIN, vmax=HEATMAP_VMAX)
+    # 差分は RdBu (青=High, 赤=Low)
+    ax = sns.heatmap(pivot_diff_imp, cmap="RdBu", center=0, 
+                annot=True, fmt=".3f", cbar=True, 
+                vmin=HEATMAP_VMIN, vmax=HEATMAP_VMAX,
+                annot_kws={'size': TICK_FONT_SIZE},
+                cbar_kws={'label': ''})
     
-    plt.title("Market最低時の累積利回りの差", fontsize=TITLE_FONT_SIZE)
-    plt.xlabel("Factors")
-    plt.ylabel("Delay")
+    apply_axis_settings(ax, "Market最低時の累積利回りの差", "Factors", "Delay", ylabel_visible=True)
+    
     plt.tight_layout()
     plt.savefig("heatmap_deviation_diff.png")
     print("画像保存: heatmap_deviation_diff.png")
