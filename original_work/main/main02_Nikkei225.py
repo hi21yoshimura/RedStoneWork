@@ -161,7 +161,7 @@ binary_operators = [max, min, add, diff, multiple, get_x, get_y, x_is_greater_th
 time_window = 200
 #delay_time_max = 2   [1, 2,  7, 30]
 #num_factors_max = 4  [2, 4, 10, 15]
-delay_time_max = 30
+delay_time_max = 1
 num_factors_max = 2
 
 # --- trainとtestに分ける ---
