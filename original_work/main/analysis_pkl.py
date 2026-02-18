@@ -1,11 +1,10 @@
 """
-Trader-Company法 卒業研究分析スクリプト (Final Version 9)
+Trader-Company法 卒業研究分析スクリプト (Final Version 10)
 
 修正点:
-- 軸ラベル(xlabel, ylabel)と目盛り(ticks)のフォントサイズを拡大調整
-- BASE_PKL_DIR, CACHE_FILE は指定の設定を維持
-- (A)最終累積利回りをRandom/Geneticの比較形式(2枚並び・赤白緑)で出力
-- (D)のタイトル変更と全フォントサイズの最適化
+- (A)最終累積利回りを「左右結合版」に戻して出力
+- (A)の「独立画像版」のコードはコメントアウトして保存
+- その他、フォントサイズや配色はv9の状態を維持
 """
 
 import sys
@@ -248,7 +247,7 @@ def show_average_table(df, market_stats):
     df_table.to_csv("average_comparison_table.csv")
 
 def plot_heatmaps(df):
-    """ヒートマップを出力 (フォントサイズ調整・(A)個別出力版)"""
+    """ヒートマップを出力"""
     print("\n--- ヒートマップを作成中 ---")
     
     # カスタムカラーマップ作成: 赤(低) -> 白(中) -> 緑(高)
@@ -264,7 +263,7 @@ def plot_heatmaps(df):
         'vmax': HEATMAP_VMAX,
         'cmap': custom_cmap,
         'annot_kws': {'size': TICK_FONT_SIZE},     # ヒートマップ内の数字サイズ
-        'cbar_kws': {'label': ''}                  # カラーバーラベル(必要なら設定)
+        'cbar_kws': {'label': ''}                  # カラーバーラベル
     }
     
     # (D) 用のデータ計算: Genetic乖離 - Random乖離
@@ -284,36 +283,34 @@ def plot_heatmaps(df):
         ax.tick_params(axis='both', which='major', labelsize=TICK_FONT_SIZE)
         
         # カラーバーのフォントサイズ調整 (Seabornの仕様上、作成後にアクセス)
-        cbar = ax.collections[0].colorbar
-        cbar.ax.tick_params(labelsize=TICK_FONT_SIZE)
+        if len(ax.collections) > 0:
+            cbar = ax.collections[0].colorbar
+            cbar.ax.tick_params(labelsize=TICK_FONT_SIZE)
 
-    '''
-    # --- 1. 画像(A): 最終累積利回り (Random & Genetic) ---
-    fig_a, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+    # =========================================================
+    # (A) 最終累積利回り (Random & Genetic) - 結合画像
+    # =========================================================
+    fig_a, (ax1, ax2) = plt.subplots(1, 2, figsize=(18, 7))
     
     # Random
     pivot_cum_rand = df.pivot(index="delay_time_max", columns="num_factors_max", values="cumret_random")
     pivot_cum_rand = pivot_cum_rand.sort_index(ascending=False)
     sns.heatmap(pivot_cum_rand, ax=ax1, **heatmap_kwargs)
-    ax1.set_title("最終累積利回り（Random）", fontsize=TITLE_FONT_SIZE)
-    ax1.set_xlabel("Factors")
-    ax1.set_ylabel("Delay")
+    apply_axis_settings(ax1, "最終累積利回り（Random）", "Factors", "Delay", ylabel_visible=True)
 
     # Genetic
     pivot_cum_gen = df.pivot(index="delay_time_max", columns="num_factors_max", values="cumret_genetic")
     pivot_cum_gen = pivot_cum_gen.sort_index(ascending=False)
     sns.heatmap(pivot_cum_gen, ax=ax2, **heatmap_kwargs)
-    ax2.set_title("最終累積利回り（Genetic algorithm）", fontsize=TITLE_FONT_SIZE)
-    ax2.set_xlabel("Factors")
-    ax2.set_ylabel("")
-    ax2.set_yticks([])
+    apply_axis_settings(ax2, "最終累積利回り（Genetic algorithm）", "Factors", "", ylabel_visible=False)
 
     plt.tight_layout()
     plt.savefig("heatmap_cumret_comparison.png")
     print("画像保存: heatmap_cumret_comparison.png")
     plt.close()
-    '''
 
+    # --- 以下、独立画像用のコード (コメントアウト) ---
+    '''
     # =========================================================
     # (A-1) 最終累積利回り (Random) - 独立画像
     # =========================================================
@@ -343,6 +340,8 @@ def plot_heatmaps(df):
     plt.savefig("heatmap_cumret_genetic.png")
     print("画像保存: heatmap_cumret_genetic.png")
     plt.close()
+    '''
+    # --------------------------------------------------------
 
     # =========================================================
     # (B)&(C) 乖離の比較 (Market最低時) - 連結画像
@@ -350,7 +349,7 @@ def plot_heatmaps(df):
     fig_bc, (ax3, ax4) = plt.subplots(1, 2, figsize=(18, 7))
     
     heatmap_kwargs_bc = heatmap_kwargs.copy()
-    del heatmap_kwargs_bc['cmap'] # デフォルト配色に戻す
+    del heatmap_kwargs_bc['cmap'] # デフォルト配色(Reds/Blues)に戻す
 
     # (B) Random 乖離
     pivot_diff_rand = df.pivot(index="delay_time_max", columns="num_factors_max", values="diff_min_random")
